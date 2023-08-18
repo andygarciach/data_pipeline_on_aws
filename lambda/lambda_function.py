@@ -8,4 +8,4 @@ def lambda_handler(event, context):
     return {
         'statusCode': donwload_res.status_code,
         'body': json.dumps('Download status code!')
-    }zip
+    }
