@@ -1,11 +1,18 @@
-import json
-from download import download
-
+import os
+from download import download_file
+from upload import upload_s3
+ 
 def lambda_handler(event, context):
-    # TODO implement
-    donwload_res = download('2021-01-29-0.json.gz')
-    
-    return {
-        'statusCode': donwload_res.status_code,
-        'body': json.dumps('Download status code!')
-    }
+    file = '2021-01-29-2.json.gz'
+    download_res = download_file(file)
+    bucket = os.environ.get('BUCKET_NAME')
+    environ = os.environ.get('ENVIRON')
+    if environ == 'DEV':
+        print(f'Running in {environ} environment')
+        os.environ.setdefault('AWS_PROFILE', 'itvgithub')
+    upload_res = upload_s3(
+        download_res.content,
+        bucket,
+        file
+    )
+    return upload_res

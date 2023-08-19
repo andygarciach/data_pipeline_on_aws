@@ -1,20 +1,14 @@
-import os
 import boto3
-import requests
-
-os.environ.setdefault('AWS_PROFILE', 'itvgithub')
-
-s3_client = boto3.client('s3')
-
-file = '2021-01-29-0.json.gz'
-res = requests.get(f'https://data.gharchive.org/{file}')
-
-upload_res = s3_client.put_object(
-    Bucket='gh-data-project',
+ 
+def get_client():
+  return boto3.client('s3')
+ 
+def upload_s3(body, bucket, file):
+  s3_client = get_client()
+  res = s3_client.put_object(
+    Bucket=bucket,
     Key=file,
-    Body=res.content
-)
-
-##print(s3_objects['Contents'][0])
-print(upload_res)
+    Body=body
+  )
+  return res
 
