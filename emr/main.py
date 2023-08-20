@@ -27,7 +27,7 @@ def main():
                     .config('spark.hadoop.fs.s3a.access.key', access_key) \
                     .config('spark.hadoop.fs.s3a.secret.key', secret_key).getOrCreate()
     else:
-        spark = SparkSession.builder.master('yarn').appName("Data Transformation").getOrCreate()
+        spark = SparkSession.builder.master('yarn').appName("Data Transformation").config("spark.sql.debug.maxToStringFields","1000").getOrCreate()
 
     BUCKET=os.environ.get('BUCKET')
     #Preparing JSON RAW DATA
@@ -38,13 +38,32 @@ def main():
     
     #Write RAM Data to Parquet Files
     SILVER=os.environ.get('SILVER')
-    
     dfSilver = df.withColumn("year", year("created_at")).withColumn("month",month("created_at")).withColumn("dayofmonth",dayofmonth("created_at"))
-    
     dfWrite = dfSilver
     dfWrite.printSchema()
-    
     dfWrite.write.mode("overwrite").format("parquet").save(f's3a://{BUCKET}/{SILVER}/')
+    
+    
+    #Preparing gold Data for consumption
+
+    GOLD=os.environ.get('GOLD')
+    dfGHSilver = spark.read.parquet(f"s3a://{BUCKET}/{SILVER}/")
+    dfGHSilver.createOrReplaceTempView("SilverData")
+    dfSilverToGold = spark.sql(f"""SELECT type
+         ,repo.id
+         ,repo.name
+         ,actor.login
+         ,payload.action as event
+         ,year
+         ,month
+         ,dayofmonth
+         ,payload.commits
+          FROM SilverData
+        """)
+    dfSilverToGold.write.mode("overwrite").format("parquet").save(f's3a://{BUCKET}/{GOLD}/')
+
+    
+    
     spark.stop()
 
 if __name__=='__main__':
