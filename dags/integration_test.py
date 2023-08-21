@@ -13,8 +13,8 @@ from airflow.models import Variable
 
 # Configurations
 
-EMR_LOGS = Variable.get("EMR_S3_BUCKET")  # replace this with your bucket name for EMR logs
-BUCKET_NAME = Variable.get("AIRFLOW_BUCKET")  # bucket with dags
+EMR_LOGS = Variable.get("BUCKET")  # replace this with your bucket name for EMR logs
+BUCKET_NAME = Variable.get("BUCKET")  # bucket with dags
 REGION = Variable.get("AWS_REGION")
 os.environ['AWS_DEFAULT_REGION'] = Variable.get("AWS_REGION")
 SPARK_STEPS = [
